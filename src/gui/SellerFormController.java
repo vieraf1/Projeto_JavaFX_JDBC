@@ -1,8 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -17,6 +20,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Seller;
@@ -25,7 +29,7 @@ import model.service.SellerService;
 
 public class SellerFormController implements Initializable {
 	
-	private Seller department;
+	private Seller seller;
 	
 	private SellerService service;
 	
@@ -36,9 +40,27 @@ public class SellerFormController implements Initializable {
 	
 	@FXML
 	private TextField txtName;
+	
+	@FXML
+	private TextField txtEmail;
+	
+	@FXML
+	private DatePicker dpBirthDate;
+	
+	@FXML
+	private TextField txtBaseSalary;
 
 	@FXML
 	private Label labelErrorName;
+	
+	@FXML
+	private Label labelErrorEmail;
+	
+	@FXML
+	private Label labelErrorBirtDate;
+	
+	@FXML
+	private Label labelErrorBaseSalary;
 	
 	@FXML
 	private Button btSave;
@@ -46,8 +68,8 @@ public class SellerFormController implements Initializable {
 	@FXML
 	private Button btCancel;
 	
-	public void setSeller(Seller department) {
-		this.department = department;
+	public void setSeller(Seller seller) {
+		this.seller = seller;
 	}
 	
 	public void setSellerService(SellerService service) {
@@ -61,7 +83,7 @@ public class SellerFormController implements Initializable {
 	@FXML
 	private void onBtSaveAction(ActionEvent event) {
 		
-		if(department == null) {
+		if(seller == null) {
 			throw new IllegalStateException("Seller was null!");
 		}
 		if(service == null) {
@@ -69,8 +91,8 @@ public class SellerFormController implements Initializable {
 		}
 		
 		try {
-			department = getFormData();
-			service.saveOrUpdate(department);
+			seller = getFormData();
+			service.saveOrUpdate(seller);
 			notifyDataChangeListeners();
 			Utils.currentStage(event).close();
 		}
@@ -112,7 +134,10 @@ public class SellerFormController implements Initializable {
 	
 	private void initializeNodes() {
 		Constraints.setTextFieldInteger(txtId);
-		Constraints.setTextFieldMaxLength(txtName, 30);
+		Constraints.setTextFieldMaxLength(txtName, 70);
+		Constraints.setTextFieldDouble(txtBaseSalary);
+		Constraints.setTextFieldMaxLength(txtEmail, 100);
+		Utils.formatDatePicker(dpBirthDate, "dd/MM/yyyy");
 	}
 	
 	@Override
@@ -121,11 +146,17 @@ public class SellerFormController implements Initializable {
 	}
 	
 	public void updateFormData() {
-		if(department == null) {
+		if(seller == null) {
 			throw new IllegalStateException("Seller was null!");
 		}
-		txtId.setText(String.valueOf(department.getId()));
-		txtName.setText(department.getName());
+		txtId.setText(String.valueOf(seller.getId()));
+		txtName.setText(seller.getName());
+		txtEmail.setText(seller.getEmail());
+		Locale.setDefault(Locale.US);
+		txtBaseSalary.setText(String.format("%.2f", seller.getBaseSalary()));
+		if(seller.getBirthDate() != null) {
+			dpBirthDate.setValue((LocalDateTime.ofInstant(seller.getBirthDate().toInstant(), ZoneId.systemDefault())).toLocalDate());
+		}
 	}
 	
 	public void setErrorMessages(Map<String,String> errors) {
